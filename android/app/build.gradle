@@ -1,0 +1,96 @@
+apply plugin: "com.android.application"
+apply plugin: "com.facebook.react"
+apply plugin: "org.jetbrains.kotlin.android"
+/**
+ * This is the configuration block to customize your React Native Android app.
+ * By default you don't need to apply any configuration, just uncomment the lines you need.
+ */
+react {
+    /* Folders */
+    root = file("$rootDir/..")
+    reactNativeDir = file("$rootDir/../node_modules/react-native")
+    codegenDir = file("$rootDir/../node_modules/@react-native/codegen")
+    cliFile = file("$rootDir/../node_modules/react-native/cli.js")
+    entryFile = file("$rootDir/../index.js")
+    hermesEnabled = true
+    autolinkLibrariesWithApp()
+}
+
+android {
+    namespace "com.wiiiind.budgetapp"
+    compileSdkVersion 33
+
+    defaultConfig {
+        applicationId "com.wiiiind.budgetapp"
+        minSdkVersion 21
+        targetSdkVersion 33
+        versionCode 1
+        versionName "1.0.0"
+        multiDexEnabled true
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+        release {
+            storeFile file('release.keystore')
+            storePassword 'PocketLedger'
+            keyAlias 'budgetapp'
+            keyPassword 'PocketLedger'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation "com.facebook.react:react-android:0.76.3"
+    implementation "com.facebook.react:hermes-android:0.76.3"
+
+    implementation project(':react-native-async-storage')
+    implementation project(':react-native-safe-area-context')
+    implementation project(':react-native-vector-icons')
+    implementation project(':react-native-svg')
+
+    debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}")
+    debugImplementation("com.facebook.flipper:flipper-network-plugin:${FLIPPER_VERSION}") {
+        exclude group:'com.squareup.okhttp3', module:'okhttp'
+    }
+    debugImplementation("com.facebook.flipper:flipper-fresco-plugin:${FLIPPER_VERSION}")
+
+    def multidex_version = "2.0.1"
+    implementation "androidx.multidex:multidex:$multidex_version"
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name.startsWith('package') && task.name.endsWith('Resources')) {
+        def variantName = task.name.substring('package'.length(), task.name.length() - 'Resources'.length())
+        def generateTask = tasks.findByName("generate${variantName}ResValues")
+        if (generateTask != null) {
+            task.dependsOn(generateTask)
+        }
+    }
+}
+
